@@ -10,6 +10,11 @@ son dossier `commun/`.
 - `carte/carte.js` : le moteur de la carte interactive (lieux, routes jour par jour,
   frise, calendrier, dates remarquables, cartes anciennes, fiches, journaux, mobile).
 - `carte/carte.css` : ses styles.
+- `js/main.js` : navigation, changement de langue, pied de page, aperçus AVIF (toutes les pages).
+- `js/resource-modals.js`, `css/resource-features.css` : fenêtres et mises en page des pages Ressources.
+- `css/nav.css` : la barre de navigation.
+- `lib/` : bibliothèques tierces (Leaflet, Esri Leaflet, PolylineDecorator, OpenSeadragon, Mirador).
+- `video/` : le film « Naissance de l’Australie sur les cartes » (FR et EN).
 
 Rien de propre à un site ne doit figurer ici : ce qui diffère d'un site à l'autre
 passe par la configuration `window.CARTE_CONFIG`, que chaque site déclare dans son
