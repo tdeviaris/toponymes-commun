@@ -1,0 +1,2033 @@
+/* carte.css -- styles de la carte interactive, communs aux deux sites (depot toponymes-commun). */
+        @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400&display=swap');
+        :root {
+            --nav-height: 72px;
+        }
+        * { box-sizing: border-box; }
+        html, body { height: 100%; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Lato', sans-serif; 
+            background-color: #f4f4f4; 
+            color: #333; 
+            padding-top: var(--nav-height); 
+        }
+.visually-hidden {
+            position: absolute;
+            width: 1px; height: 1px;
+            padding: 0; margin: -1px;
+            overflow: hidden; clip: rect(0,0,0,0);
+            white-space: nowrap; border: 0;
+        }
+#map {
+            width: 100%;
+            height: calc(100vh - var(--nav-height));
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .map-info-control {
+            background: #fff;
+            padding: 4px 10px;
+            border-radius: 0;
+            box-shadow: none;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.7rem;
+            line-height: 1.3;
+            color: #333;
+            font-family: 'Lato', sans-serif;
+            pointer-events: auto;
+            user-select: none;
+        }
+        .leaflet-bottom.leaflet-left .leaflet-control.map-info-control {
+            margin: 0;
+        }
+        .map-info-coordinates { white-space: nowrap; }
+        .map-info-scale-wrapper { display: flex; align-items: baseline; }
+        .map-info-scale-wrapper .leaflet-control-scale {
+            margin: 0;
+            background: transparent;
+        }
+        .map-info-scale-wrapper .leaflet-control-scale-line {
+            background: transparent;
+            color: #333;
+            border: 1px solid #555;
+            border-top: none;
+            padding: 0 6px 2px;
+            border-radius: 0;
+            box-shadow: none;
+            font-size: 0.7rem;
+            line-height: 1.3;
+            margin-top: 3px;
+        }
+        /* Les fournisseurs d'imagerie imposent de longues mentions, qui venaient
+           recouvrir les commandes. On les tient sur une ligne tronquée, dépliée
+           au survol ou au clavier, sans rien retirer du texte. */
+        /* esri-leaflet pose lui-même un max-width en style: il faut passer devant. */
+        .leaflet-control-attribution {
+            max-width: 46vw !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: max-width 0.2s ease;
+        }
+        .leaflet-control-attribution:hover,
+        .leaflet-control-attribution:focus-within {
+            max-width: 92vw !important;
+            white-space: normal;
+            overflow: visible;
+        }
+        @media (max-width: 768px) {
+            /* Sur la ligne du bas, à droite de la barre d'info : la mention se
+               tronque à la place qui reste (--place-attribution, mesurée en JS). */
+            .leaflet-control-attribution {
+                max-width: var(--place-attribution, 40vw) !important;
+                margin-bottom: 0 !important;
+            }
+            /* touchée, elle se déplie au-dessus de la barre */
+            .leaflet-control-attribution:hover,
+            .leaflet-control-attribution:focus-within {
+                max-width: 92vw !important;
+            }
+        }
+
+        /* Choix du fond et, pour les cartes anciennes, leur opacité, puis
+           l'échelle à leur droite, sur la même ligne. */
+        .map-info-scale-wrapper { gap: 10px; flex-wrap: wrap; }
+        .map-info-basemap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.7rem;
+            line-height: 1.3;
+            color: #333;
+            font-family: 'Lato', sans-serif;
+            align-self: flex-end;
+            margin-bottom: 2px;
+        }
+        .map-info-basemap select {
+            font-family: inherit;
+            font-size: 0.7rem;
+            color: #333;
+            background: #fff;
+            border: 1px solid #555;
+            border-radius: 3px;
+            padding: 1px 4px;
+            cursor: pointer;
+            max-width: 150px;
+        }
+        .map-info-opacity {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.7rem;
+            line-height: 1.3;
+            color: #333;
+            font-family: 'Lato', sans-serif;
+            align-self: flex-end;
+            margin-bottom: 2px;
+        }
+        .map-info-opacity[hidden] { display: none; }
+        .map-info-opacity input[type="range"] {
+            width: 60px;
+            margin: 0;
+            cursor: pointer;
+            accent-color: #0056b3;
+        }
+        .map-info-opacity output {
+            min-width: 2.6em;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Expedition toggles : un tableau, une ligne par expedition sur sa
+           couleur, trois colonnes de cases alignees sous leurs en-tetes. */
+        .layer-toggle {
+            --lt-cell: 44px;
+            position: absolute;
+            top: calc(var(--nav-height) + 10px);
+            left: 6px;
+            z-index: 400; /* below popups */
+            display: grid;
+            gap: 4px;
+            width: 284px;
+            padding: 6px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(4px);
+            font-family: 'Lato', sans-serif;
+        }
+        .lt-head,
+        .lt-row {
+            display: grid;
+            grid-template-columns: 1fr repeat(3, var(--lt-cell));
+            align-items: center;
+        }
+        .lt-head {
+            padding: 0 0 1px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            color: #5b6470;
+            text-align: center;
+        }
+        .lt-row {
+            --toggle-color: #0b63d1;
+            min-height: 36px;
+            border-radius: 7px;
+            background: var(--toggle-color);
+            color: #fff;
+            box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+        }
+        .toggle-baudin { --toggle-color: #0b63d1; }
+        .toggle-entre { --toggle-color: #238b45; }
+        /* Flinders reprend le carmin de la route de l'Investigator. */
+        .toggle-flinders { --toggle-color: #c2255c; }
+        /* Campagne encore a venir : la ligne reste visible, en retrait. Sa
+           couleur vient de la configuration du site (champ `couleur`). */
+        .lt-row--avenir { opacity: 0.6; cursor: not-allowed; }
+        .lt-name {
+            padding: 0 6px 0 11px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .lt-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            align-self: stretch;
+            cursor: pointer;
+        }
+        /* Case blanche cochee a la couleur de l'expedition. */
+        .lt-cell input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            display: grid;
+            place-content: center;
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            border-radius: 4px;
+            border: 2px solid rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.12);
+            cursor: pointer;
+            transition: background-color 0.15s ease, transform 0.1s ease;
+        }
+        .lt-cell input[type="checkbox"]::after {
+            content: "";
+            width: 9px;
+            height: 5px;
+            border-left: 2.5px solid var(--toggle-color);
+            border-bottom: 2.5px solid var(--toggle-color);
+            transform: translateY(-1px) rotate(-45deg) scale(0);
+            transition: transform 0.12s ease;
+        }
+        .lt-cell input[type="checkbox"]:checked { background: #fff; border-color: #fff; }
+        .lt-cell input[type="checkbox"]:checked::after { transform: translateY(-1px) rotate(-45deg) scale(1); }
+        .lt-cell:hover input[type="checkbox"]:not(:disabled) { background: rgba(255, 255, 255, 0.3); }
+        .lt-cell:hover input[type="checkbox"]:checked:not(:disabled) { background: #fff; }
+        .lt-cell input[type="checkbox"]:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+        .lt-cell input[type="checkbox"]:active:not(:disabled) { transform: scale(0.9); }
+        /* Carte encore a venir : la case reste a sa place, en retrait. */
+        .lt-cell.is-disabled { cursor: not-allowed; }
+        .lt-cell.is-disabled input[type="checkbox"] {
+            cursor: not-allowed;
+            border-style: dashed;
+            opacity: 0.45;
+            background: transparent;
+        }
+        /* Une route affichee remplace la recherche de lieux. */
+        .search-container.is-hidden { display: none; }
+
+        /* Barre mobile : Lieux et Routes, et la lecture quand une route est
+           affichee. Elle se loge sous la recherche, et remonte en haut quand
+           celle-ci s'efface. */
+        .mobile-barre { display: none; }
+        @media (max-width: 768px) {
+            .mobile-barre {
+                position: absolute;
+                top: calc(var(--nav-height) + 64px);
+                left: 8px;
+                right: 48px;
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 6px;
+                font-family: 'Lato', sans-serif;
+                pointer-events: none;
+            }
+            .mobile-barre > * { pointer-events: auto; }
+            .mobile-barre.en-haut { top: calc(var(--nav-height) + 8px); }
+            /* La reglette ne tient pas a cote de la barre : le bouton de
+               lecture et la date la remplacent. */
+            body .panneaux-droite { display: none; }
+        }
+        .mobile-play,
+        .mobile-menu-btn {
+            height: 36px;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+            color: #222;
+            cursor: pointer;
+        }
+        .mobile-play[hidden], .mobile-date[hidden] { display: none; }
+        .mobile-play {
+            width: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        .mobile-icon-play {
+            width: 0; height: 0;
+            margin-left: 3px;
+            border-left: 13px solid #222;
+            border-top: 8px solid transparent;
+            border-bottom: 8px solid transparent;
+        }
+        /* En lecture, le bouton devient pause. */
+        .mobile-play[aria-pressed="true"] { background: #d9e8fb; border-color: #0b63d1; }
+        .mobile-play[aria-pressed="true"] .mobile-icon-play {
+            width: 12px; height: 14px;
+            margin-left: 0;
+            border: solid #222;
+            border-width: 0 4px;
+        }
+        .mobile-date {
+            padding: 3px 10px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .mobile-menu { position: relative; }
+        .mobile-menu-btn {
+            padding: 0 14px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .mobile-menu-btn[aria-expanded="true"] { background: #fff; border-color: #0b63d1; }
+        .mobile-menu-liste {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            display: grid;
+            gap: 4px;
+            min-width: 190px;
+            padding: 6px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+        }
+        .mobile-menu-liste[hidden] { display: none; }
+        /* La couleur vient de la classe toggle-entre, -baudin ou -flinders. */
+        .mobile-choix {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 40px;
+            padding-left: 12px;
+            border-radius: 7px;
+            background: var(--toggle-color);
+            color: #fff;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .mobile-choix .lt-cell { width: 44px; }
+        .ship-block {
+            padding: 6px 10px;
+            border-radius: 7px;
+            background: #f3f4f6;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+        }
+        .ship-block-title {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            opacity: 0.6;
+            margin-bottom: 4px;
+        }
+        .ship-list { display: flex; flex-direction: column; gap: 3px; }
+        /* Libelles de navires : texte sombre, sans le fond d'une ligne. */
+        .layer-toggle .ship-block label.ship-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 12px;
+            cursor: pointer;
+            line-height: 1.3;
+            background: transparent;
+            border: none;
+            color: #222;
+            padding: 2px 0;
+            border-radius: 0;
+            box-shadow: none;
+            font-weight: 400;
+        }
+        .layer-toggle .ship-block label.ship-item input[type="checkbox"] {
+            accent-color: #444;
+            width: auto;
+            height: auto;
+        }
+        .layer-toggle .ship-block label.ship-item span { flex: 0 0 auto; font-weight: 400; }
+        .layer-toggle .ship-block label.ship-item span:last-child { flex: 1; }
+        .ship-item input[type="checkbox"] { margin: 0; cursor: pointer; }
+        .layer-toggle .ship-block .ship-swatch {
+            width: 18px;
+            height: 3px;
+            border-radius: 2px;
+            flex: 0 0 auto;
+            border: none;
+        }
+
+        .parcours-popup { font-size: 12px; line-height: 1.35; }
+        .parcours-popup-date { font-weight: 700; font-size: 13px; }
+        .parcours-popup-ship { font-size: 11px; opacity: 0.65; margin-top: 1px; }
+        .parcours-popup-source {
+            font-size: 11px;
+            font-style: italic;
+            opacity: 0.6;
+            margin-top: 1px;
+            line-height: 1.3;
+        }
+        /* Le trait separe l'en-tete (date, navire) du corps de la fiche. */
+        .parcours-popup-body {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        .parcours-popup-src { margin-bottom: 4px; }
+        .parcours-popup-lien {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            opacity: 0.7;
+        }
+        a.parcours-popup-lien { text-decoration: underline; }
+        .parcours-popup-vo { font-size: 10px; font-style: italic; opacity: 0.55; }
+        /* Journal traduit : traduction ou original, au choix du lecteur. */
+        [data-journal] .vo-original,
+        [data-journal].journal-vo .vo-traduit { display: none; }
+        [data-journal].journal-vo .vo-original { display: block; }
+        [data-journal].journal-vo span.vo-original { display: inline; }
+        .journal-bascule {
+            margin-left: 6px;
+            padding: 1px 7px;
+            font: inherit;
+            font-size: 10px;
+            color: inherit;
+            background: transparent;
+            border: 1px solid currentColor;
+            border-radius: 9px;
+            opacity: 0.7;
+            cursor: pointer;
+            vertical-align: 1px;
+        }
+        .journal-bascule:hover { opacity: 1; }
+        .journal-bascule:focus-visible { outline: 2px solid #FFD700; outline-offset: 2px; }
+        /* Une journee peut porter cinq recits : chacun se plie a une hauteur
+           de fenetre et defile chez lui, pour que la fiche entiere reste lisible. */
+        .parcours-popup-journal {
+            max-height: 150px;
+            overflow-y: auto;
+            text-align: left;
+            hyphens: auto;
+            /* La marge degage l'ascenseur du texte. */
+            padding-right: 6px;
+            scrollbar-width: thin;
+        }
+        /* Journal tenu en releves horaires (Hamelin) : les lignes sont gardees. */
+        .parcours-popup-journal-lignes { white-space: pre-line; }
+        /* Releves horaires de Hamelin : un vrai tableau, compact, qui defile
+           de cote plutot que d'elargir la fiche. */
+        .journal-tableau-cadre { overflow-x: auto; margin: 0.3em 0 0.5em; }
+        .journal-tableau {
+            border-collapse: collapse;
+            font-size: 11px;
+            line-height: 1.3;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+        .journal-tableau th, .journal-tableau td {
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            padding: 1px 5px;
+            text-align: center;
+        }
+        .journal-tableau th { font-weight: 600; background: rgba(0, 0, 0, 0.05); }
+        .journal-tableau tbody tr:nth-child(even) td { background: rgba(0, 0, 0, 0.025); }
+        /* La derniere colonne (etat du ciel) est du texte : a gauche. */
+        .journal-tableau td:last-child, .journal-tableau th:last-child { text-align: left; }
+        /* Mot raye dans le manuscrit : on le lit encore, mais barre. */
+        .journal-rature { text-decoration: line-through; opacity: 0.7; }
+        /* Relation de Labillardiere : paragraphes, titres et renvois de page. */
+        .journal-para { margin: 0 0 0.6em; }
+        .journal-para:last-child { margin-bottom: 0; }
+        .journal-titre { display: block; font-weight: 600; text-align: center; margin: 0.2em 0; }
+        .journal-page { display: block; font-size: 0.85em; color: #888; }
+        .journal-note { font-size: 0.75em; }
+        .journal-note-texte { display: block; font-size: 0.85em; color: #666; }
+        .parcours-popup-remark { margin-bottom: 6px; }
+        .parcours-popup-rows {
+            display: grid;
+            grid-template-columns: auto auto;
+            justify-content: start;
+            gap: 1px 8px;
+            margin: 0;
+        }
+        .parcours-popup-rows dt { opacity: 0.6; white-space: nowrap; }
+        .parcours-popup-rows dd { margin: 0; white-space: nowrap; }
+        .parcours-popup-winds { margin-top: 5px; }
+        .parcours-popup-winds-label {
+            display: block;
+            opacity: 0.6;
+            font-size: 11px;
+        }
+        .parcours-popup-winds-text { display: block; }
+        .parcours-popup-empty { margin-top: 6px; opacity: 0.6; font-style: italic; }
+        .parcours-popup-extrapolated {
+            font-style: italic;
+            opacity: 0.7;
+            font-size: 11px;
+        }
+        /* Le motif qui accompagne la mention : pourquoi la position a ete
+           calculee, ou d'apres quoi un releve a ete corrige. Ecrit dans les
+           donnees depuis le debut, il n'etait affiche nulle part. */
+        .parcours-popup-motif {
+            font-size: 10px;
+            line-height: 1.35;
+            opacity: 0.6;
+            margin: 1px 0 3px;
+        }
+        /* La fiche parcours reste etroite, independamment des popups de toponymes. */
+        /* Exception : la fiche de parcours reste etroite malgre la largeur imposee
+           aux popups de toponymes (720px, plus bas dans cette feuille). */
+        .leaflet-popup-content-wrapper:has(.parcours-popup),
+        .leaflet-popup-content:has(.parcours-popup) {
+            /* 460 px : les recits de journaux tiennent en moins de lignes,
+               et la fiche reste loin des 720 px des fiches de toponymes. */
+            width: 460px;
+            max-width: min(460px, calc(100vw - 60px));
+        }
+        .leaflet-popup-content:has(.parcours-popup) {
+            text-align: left;
+            padding: 10px 12px;
+        }
+
+        /* Colonne des panneaux de droite : le calendrier, puis les dates
+           remarquables au-dessous. Seuls les panneaux prennent la souris ; le
+           vide entre eux laisse passer les clics vers la carte. */
+        .panneaux-droite {
+            position: absolute;
+            top: 10px;
+            /* Juste a gauche des boutons de zoom (34 px + marge). */
+            right: 56px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .panneaux-droite > * { pointer-events: auto; }
+        /* Le calendrier donne la mesure. Une largeur nulle empeche le bloc des
+           dates de peser sur celle de la colonne ; `min-width` le ramene
+           ensuite a la largeur ainsi fixee. */
+        .panneaux-droite > .remarquables-panel {
+            width: 0;
+            min-width: 100%;
+            box-sizing: border-box;
+        }
+        .timeline-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 6px;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+            /* La marge laterale loge les crochets, qui debordent la reglette. */
+            padding: 6px 15px 5px;
+            font-size: 12px;
+            user-select: none;
+        }
+        /* Le bloc des dates remarquables reprend l'habit du calendrier : le
+           titre a gauche, et la liste en face, qui garde le repere choisi
+           sous les yeux une fois refermee. */
+        .remarquables-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 6px;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+            padding: 6px 15px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+        }
+        /* `display: flex` l'emporterait sur le `display: none` que le navigateur
+           attache a l'attribut hidden : il faut le redire ici. */
+        .remarquables-panel[hidden] { display: none; }
+        .remarquables-select {
+            /* Base nulle : sans elle, la plus longue des lignes imposerait sa
+               largeur au bloc, et le calendrier s'etirerait avec lui. La liste
+               se contente de remplir la place que le calendrier a fixee. */
+            flex: 1 1 0;
+            min-width: 0;
+            font-family: inherit;
+            font-size: 12px;
+            color: #222;
+            background: #fff;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            padding: 2px 4px;
+        }
+        /* La ligne de la date reprend le decoupage de celle du dessous : la
+           largeur de la reglette, puis celle de la colonne des boutons. La date
+           se centre ainsi sur la reglette, et l'icone du calendrier tombe juste
+           au-dessus du bouton de lecture. */
+        .timeline-date-row {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        .timeline-date-zone {
+            position: relative;
+            width: 384px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* Largeur de deux boutons et de leur ecart : la colonne de droite. */
+        .timeline-cal-zone {
+            width: 52px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .timeline-date {
+            text-align: center;
+            font-weight: 700;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+        /* Le nom de l'expedition que la reglette suit. Il se tient au bout
+           gauche de la ligne, devant la date. Tant qu'une seule expedition est
+           affichee il n'y a rien a choisir : le nom reste, sans le chevron. */
+        .timeline-exped {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            max-width: 130px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            padding: 1px 5px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            background: none;
+            font-family: inherit;
+            font-size: 11px;
+            color: rgba(0, 0, 0, 0.55);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .timeline-exped:not(:disabled) {
+            color: #0b63d1;
+            border-color: rgba(11, 99, 209, 0.35);
+            background: rgba(11, 99, 209, 0.07);
+            cursor: pointer;
+        }
+        .timeline-exped:not(:disabled):hover {
+            background: rgba(11, 99, 209, 0.16);
+        }
+        .timeline-exped:focus-visible { outline: 2px solid #0b63d1; outline-offset: 1px; }
+        /* Le chevron de bascule ne parait que lorsqu'il y a deux expeditions
+           a l'ecran, donc un choix a faire. */
+        .timeline-exped-swap { font-size: 12px; line-height: 1; }
+        .timeline-exped:disabled .timeline-exped-swap { display: none; }
+
+        /* Icone calendrier : bleue comme tout ce qui se prend a la souris. Elle
+           occupe la place d'un bouton, au-dessus de celui de lecture : sa place
+           ne remue pas au gre de la longueur de la date affichee. */
+        .timeline-cal-btn {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            border: 0;
+            background: none;
+            color: #0b63d1;
+            cursor: pointer;
+            border-radius: 3px;
+            line-height: 0;
+        }
+        .timeline-cal-btn:hover { color: #08408c; }
+        .timeline-cal-btn:focus-visible { outline: 2px solid #0b63d1; outline-offset: 1px; }
+        .timeline-cal-btn svg { width: 15px; height: 15px; display: block; }
+
+        /* Le calendrier de saisie. Il flotte sous la date, cale sur son bord
+           droit pour ne jamais deborder du panneau vers les boutons de zoom. */
+        .timeline-calendar {
+            position: absolute;
+            top: calc(100% + 5px);
+            right: 0;
+            z-index: 1200;
+            width: 224px;
+            box-sizing: border-box;
+            padding: 6px;
+            background: #fff;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            cursor: default;
+        }
+        .timeline-calendar[hidden] { display: none; }
+        .cal-head {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 5px;
+        }
+        .cal-nav {
+            flex: 0 0 auto;
+            width: 20px;
+            height: 22px;
+            padding: 0;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            background: #fff;
+            color: #0b63d1;
+            font-size: 14px;
+            line-height: 1;
+            cursor: pointer;
+        }
+        .cal-nav:hover:not(:disabled) { background: rgba(11, 99, 209, 0.10); }
+        .cal-nav:disabled { color: rgba(0, 0, 0, 0.25); cursor: default; }
+        .cal-head select {
+            flex: 1 1 auto;
+            min-width: 0;
+            font-family: inherit;
+            font-size: 12px;
+            color: #222;
+            background: #fff;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            padding: 2px 3px;
+        }
+        .cal-head #cal-annee { flex: 0 0 62px; }
+        .cal-dows, .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+        }
+        .cal-dow {
+            text-align: center;
+            font-size: 10px;
+            font-weight: 700;
+            color: rgba(0, 0, 0, 0.5);
+            padding-bottom: 2px;
+        }
+        .cal-jour {
+            position: relative;
+            height: 24px;
+            padding: 0;
+            border: 0;
+            border-radius: 4px;
+            background: none;
+            font-family: inherit;
+            font-size: 11px;
+            color: #222;
+            cursor: pointer;
+        }
+        .cal-jour:hover:not(:disabled) { background: rgba(11, 99, 209, 0.12); }
+        /* Hors de la periode couverte par l'expedition : rien a y voir. */
+        .cal-jour:disabled { color: rgba(0, 0, 0, 0.22); cursor: default; }
+        .cal-jour.is-vide { visibility: hidden; }
+        .cal-jour.is-choisi { background: #0b63d1; color: #fff; font-weight: 700; }
+        /* Pastille sous les jours ou un navire a laisse un releve. */
+        .cal-jour.a-releve::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: 2px;
+            width: 3px;
+            height: 3px;
+            margin-left: -1.5px;
+            border-radius: 50%;
+            background: #0b63d1;
+        }
+        .cal-jour.is-choisi.a-releve::after { background: #fff; }
+        .timeline-row { display: flex; align-items: flex-start; gap: 8px; }
+        /* Les crochets se placent en pourcentage de cette boite, comme les
+           graduations : pas de marge interieure, sans quoi les deux reperes se
+           decaleraient l'un par rapport a l'autre. Ils debordent un peu dans la
+           marge du panneau, ce qui ne gene rien. */
+        .timeline-ruler { position: relative; width: 384px; }
+        .timeline-ticks {
+            position: relative;
+            height: 7px;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.55);
+        }
+        .timeline-tick {
+            position: absolute;
+            bottom: 0;
+            width: 1px;
+            height: 3px;
+            background: rgba(0, 0, 0, 0.35);
+        }
+        .timeline-tick.is-year {
+            height: 9px;
+            width: 2px;
+            margin-left: -0.5px;
+            background: rgba(0, 0, 0, 0.75);
+        }
+
+        /* Crochets de selection : on ne garde a l'ecran que les trajets compris
+           entre les deux. Bleus et gras pour qu'on voie qu'ils se prennent. */
+        /* Le crochet est trace en bordures plutot qu'ecrit au clavier : la
+           hauteur d'un caractere depend de la fonte, celle d'une bordure non.
+           Il court du dessus des graduations au dessous des initiales de mois,
+           et s'arrete avant le curseur de date, qu'il ne doit pas gener. */
+        .timeline-bracket {
+            position: absolute;
+            top: -7px;
+            height: 30px;
+            width: 15px;                /* la zone de prise, plus large que le trait */
+            transform: translateX(-50%);
+            padding: 0;
+            border: 0;
+            background: none;
+            font-size: 0;               /* le caractere du balisage ne sert qu'aux lecteurs d'ecran */
+            cursor: ew-resize;
+            z-index: 6;
+            touch-action: none;
+        }
+        .timeline-bracket::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 7px;
+            box-sizing: border-box;
+            border: 3px solid #0b63d1;
+            /* Un lisere blanc, pour que le crochet se detache des graduations. */
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
+        }
+        /* Chaque crochet se tient entierement en dehors de la periode qu'il
+           borne : l'ouvrant a gauche de sa date, le fermant a droite. Les deux
+           enserrent ainsi ce qu'ils retiennent, et aux extremites ils ne
+           recouvrent plus les initiales de mois. */
+        #timeline-bracket-debut::before {
+            right: 50%;
+            border-right: 0;
+        }
+        #timeline-bracket-fin::before {
+            left: 50%;
+            border-left: 0;
+        }
+        .timeline-bracket:hover::before,
+        .timeline-bracket.is-drag::before { border-color: #08408c; }
+        .timeline-bracket:focus-visible { outline: 2px solid #0b63d1; outline-offset: 1px; }
+        /* Ce qui tombe hors des crochets est grise sur la reglette elle-meme. */
+        .timeline-hors {
+            position: absolute;
+            top: -7px;
+            height: 30px;
+            background: rgba(11, 99, 209, 0.10);
+            pointer-events: none;
+            z-index: 5;
+        }
+        .timeline-ruler input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            /* La poignee du curseur, haute de 18 px, remonte de 8 px au-dessus de
+               sa piste, qui n'en fait que 3 : sans cette marge elle monterait
+               jusque dans les initiales de mois et viendrait toucher les
+               crochets. Elle les degage de six bons pixels. */
+            margin: 19px 0 0;
+            background: transparent;
+            cursor: pointer;
+        }
+        .timeline-ruler input[type="range"]::-webkit-slider-runnable-track {
+            height: 3px;
+            background: rgba(0, 0, 0, 0.12);
+            border-radius: 2px;
+        }
+        .timeline-ruler input[type="range"]::-moz-range-track {
+            height: 3px;
+            background: rgba(0, 0, 0, 0.12);
+            border-radius: 2px;
+        }
+        .timeline-ruler input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            margin-top: -8px;
+            border-radius: 50%;
+            background: #0b63d1;
+            border: 2px solid #fff;
+            box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+        }
+        .timeline-ruler input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #0b63d1;
+            border: 2px solid #fff;
+            box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+        }
+        .timeline-months { position: relative; height: 11px; }
+        .timeline-month {
+            position: absolute;
+            transform: translateX(-50%);
+            font-size: 9px;
+            line-height: 11px;
+            opacity: 0.55;
+            white-space: nowrap;
+        }
+        .timeline-years { position: relative; height: 16px; margin-top: 1px; }
+        .timeline-year {
+            position: absolute;
+            transform: translateX(-50%);
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 16px;
+            opacity: 0.85;
+            white-space: nowrap;
+        }
+        .timeline-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding-top: 2px;
+        }
+        .timeline-btn-row { display: flex; gap: 4px; }
+        .timeline-btn {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            border: 1px solid rgba(0, 0, 0, 0.25);
+            border-radius: 4px;
+            background: #fff;
+            cursor: pointer;
+        }
+        .timeline-btn:hover { background: #f0f0f0; }
+        .timeline-btn[aria-pressed="true"] { background: #d9e8fb; border-color: #0b63d1; }
+        .timeline-icon-stop { width: 9px; height: 9px; background: #333; }
+        .timeline-icon-play {
+            width: 0; height: 0;
+            border-left: 10px solid #333;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+        }
+        /* Chevrons « ‹ » et « › », pour ne pas les confondre avec le triangle
+           plein du bouton de lecture. */
+        .timeline-icon-next, .timeline-icon-prev {
+            width: 6px;
+            height: 6px;
+            border: solid #333;
+            border-width: 2px 2px 0 0;
+        }
+        .timeline-icon-next { transform: rotate(45deg); margin-left: -3px; }
+        .timeline-icon-prev { transform: rotate(-135deg); margin-right: -3px; }
+        .timeline-btn:disabled { opacity: 0.35; cursor: default; }
+        /* Pastilles de navires sur la carte */
+        .ship-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 17px;
+            height: 17px;
+            border-radius: 50%;
+            color: #fff;
+            font-weight: 700;
+            font-size: 11px;
+            line-height: 1;
+            border: 1.5px solid #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+        }
+        @media (max-width: 640px) {
+            .timeline-ruler { width: 200px; }
+            .timeline-panel { right: 52px; padding: 5px 12px 4px; }
+        }
+
+        /* Ensure popups sit above toggles */
+        .leaflet-popup-pane { z-index: 1200 !important; }
+
+        /* Mode calage (map.html?calage=flinders), local seulement. */
+        .calage-panel {
+            position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%);
+            z-index: 1100; width: min(620px, calc(100vw - 32px));
+            background: rgba(255,255,255,0.97); border-radius: 10px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.25); padding: 10px 12px;
+            font-family: 'Lato', sans-serif; font-size: 13px; color: #222;
+        }
+        .calage-ligne { display: flex; align-items: center; gap: 8px; }
+        .calage-ligne + .calage-ligne { margin-top: 6px; }
+        .calage-titre { flex: 1; text-align: center; }
+        .calage-date { font-weight: 700; font-size: 15px; }
+        .calage-statut { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 10px;
+            font-size: 11px; font-weight: 700; background: #eee; }
+        .calage-statut.est { background: #fde7c7; color: #8a4b00; }
+        .calage-statut.cale { background: #d5f2dc; color: #17652e; }
+        .calage-statut.sans { background: #e6e6e6; color: #555; }
+        .calage-statut.rel { background: #dbe7fb; color: #1d4a8f; }
+        .calage-panel button { font: inherit; border: 1px solid #c9ced6; background: #fff;
+            border-radius: 6px; padding: 4px 9px; cursor: pointer; }
+        .calage-panel button:hover { background: #f1f4f8; }
+        .calage-panel .calage-fleche { font-size: 16px; padding: 2px 10px; }
+        .calage-extrait { max-height: 64px; overflow-y: auto; font-size: 12px; line-height: 1.35;
+            color: #444; border-top: 1px solid #eee; padding-top: 6px; }
+        .calage-aide { font-size: 11px; color: #666; }
+        .calage-progres { font-size: 11px; color: #666; white-space: nowrap; }
+        .calage-erreur { color: #b00020; font-weight: 700; }
+
+        /* Search Interface */
+        .search-container {
+            position: absolute;
+            top: calc(var(--nav-height) + 12px);
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 4px 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(4px);
+            min-width: 320px;
+        }
+
+        .search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: 'Lato', sans-serif;
+            font-size: 0.85rem;
+            padding: 2px 4px;
+            color: #333;
+        }
+
+        .search-input::placeholder {
+            color: #888;
+        }
+
+        .search-clear {
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            color: #666;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 50%;
+            transition: background-color 0.2s ease;
+            display: none;
+        }
+
+        .search-clear:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .search-clear.visible {
+            display: block;
+        }
+
+        .search-button {
+            background: none;
+            border: none;
+            font-size: 1rem;
+            color: #0056b3;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 50%;
+            transition: background-color 0.2s ease;
+            margin-left: 4px;
+        }
+
+        .search-button:hover {
+            background-color: rgba(0, 86, 179, 0.1);
+        }
+
+        .search-results {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 4px 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(4px);
+            font-family: 'Lato', sans-serif;
+            font-size: 0.85rem;
+            color: #555;
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-results.visible {
+            display: flex;
+        }
+
+        .search-nav-button {
+            background: rgba(0, 86, 179, 0.8);
+            border: none;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-nav-button:hover {
+            background-color: #0056b3;
+        }
+
+        .search-nav-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        @media  (max-width: 768px)  {
+            .search-container {
+                top: 95px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: calc(100% - 40px);
+                max-width: 320px;
+            }
+            .layer-toggle {
+                display: none;
+            }
+
+            .search-box {
+                min-width: auto;
+                width: 100%;
+            }
+
+            .search-input {
+                font-size: 16px; /* Prevents iOS auto-zoom */
+            }
+
+            .search-results {
+                font-size: 0.8rem;
+            }
+        }
+
+        .leaflet-popup-content-wrapper { border-radius: 5px; overflow: hidden; }
+        .leaflet-popup-content {
+            font-size: 0.9rem;
+            line-height: 1.35;
+            width: auto;
+            overflow-x: hidden;
+            padding: 12px 12px 12px 12px;
+            margin: 0;
+            box-sizing: border-box;
+            user-select: none;
+            text-align: justify;
+        }
+        .leaflet-popup-content p { margin: 3px 0; } .leaflet-popup-content strong { color: #0056b3; }
+        .popup-link-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 12px;
+        }
+        .popup-link-row .popup-link-separator {
+            color: #888;
+        }
+        .popup-other-source {
+            margin: 6px 0;
+            line-height: 1.3;
+        }
+        .popup-other-source-link {
+            display: inline-block;
+            margin-top: 2px;
+            text-decoration: underline;
+            color: #0056b3;
+            word-break: break-word;
+        }
+        .leaflet-popup-content.has-scrollbar {
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 10px;
+            padding-top: 12px;
+            scrollbar-width: thin;
+            max-height: min(500px, 70vh);
+            box-sizing: border-box;
+        }
+        .leaflet-popup-content.has-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .leaflet-popup-content.has-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.35);
+            border-radius: 4px;
+        }
+        .leaflet-popup-content.has-scrollbar::-webkit-scrollbar-track {
+            background-color: rgba(0, 0, 0, 0.08);
+            border-radius: 4px;
+            margin: 28px 0 12px;
+        }
+        .leaflet-container .leaflet-popup-close-button {
+            right: 10px;
+            top: 8px;
+            width: 26px;
+            height: 26px;
+            line-height: 18px;
+            font-size: 1rem;
+            font-weight: 700;
+            background: rgba(0, 0, 0, 0.9) !important;
+            color: #fff !important;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            opacity: 1;
+            text-indent: 0;
+            text-decoration: none;
+            background-image: none !important;
+        }
+        .leaflet-container .leaflet-popup-close-button:hover {
+            background: rgba(255, 255, 255, 0.95) !important;
+            color: #000 !important;
+        }
+        .leaflet-container .leaflet-popup-close-button:focus-visible {
+            outline: 2px solid #FFD700;
+            outline-offset: 2px;
+        }
+
+        /* Fiche de parcours agrandie : un second bouton, a gauche de la croix,
+           etale la fiche dans l'espace libre de l'ecran pour lire les journaux
+           sans ascenseurs. La fiche quitte alors la carte pour un cadre fixe :
+           a droite du panneau des expeditions, sous les dates remarquables,
+           jusqu'en bas de l'ecran. */
+        .leaflet-popup .fiche-taille {
+            position: absolute;
+            right: 42px;
+            top: 8px;
+            width: 26px;
+            height: 26px;
+            padding: 0;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+            font-size: 14px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+        .leaflet-popup .fiche-taille svg { width: 14px; height: 14px; display: block; }
+        .leaflet-popup .fiche-taille:hover { background: rgba(255, 255, 255, 0.95); color: #000; }
+        .leaflet-popup .fiche-taille:focus-visible { outline: 2px solid #FFD700; outline-offset: 2px; }
+        /* Deux boutons ronds en haut a droite : l'en-tete leur laisse la place. */
+        .parcours-popup-date, .parcours-popup-ship { padding-right: 62px; }
+        .fiche-hote {
+            position: fixed;
+            inset: 0;
+            z-index: 1100;
+            pointer-events: none;
+            background: transparent !important;
+            overflow: visible;
+        }
+        .fiche-hote .leaflet-popup.fiche-agrandie {
+            pointer-events: auto;
+            position: absolute !important;
+            left: var(--fiche-left) !important;
+            top: var(--fiche-top) !important;
+            bottom: auto !important;
+            width: var(--fiche-w);
+            margin: 0 !important;
+            transform: none !important;
+            opacity: 1 !important;
+        }
+        .fiche-agrandie .leaflet-popup-tip-container { display: none; }
+        .fiche-hote .fiche-agrandie .leaflet-popup-content-wrapper {
+            width: 100% !important;
+            max-width: none !important;
+            max-height: var(--fiche-h);
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+        .fiche-hote .fiche-agrandie .leaflet-popup-content {
+            width: auto !important;
+            max-width: none !important;
+            margin-right: 20px;
+        }
+        /* Plein ecran sur mobile : les bornes des fiches ordinaires (380 px de
+           large, 65 % de la hauteur) sont levees, et les coins redeviennent
+           droits. */
+        @media (max-width: 768px) {
+            .fiche-hote { z-index: 1300; }
+            .fiche-hote .leaflet-popup.fiche-agrandie { max-width: none; }
+            .fiche-hote .fiche-agrandie .leaflet-popup-content-wrapper {
+                height: var(--fiche-h);
+                border-radius: 0;
+            }
+            .fiche-hote .fiche-agrandie .leaflet-popup-content {
+                max-height: none;
+                overflow: visible;
+                margin: 16px 16px 24px;
+            }
+        }
+        .fiche-agrandie .parcours-popup { font-size: 14px; line-height: 1.5; }
+        .fiche-agrandie .parcours-popup-date { font-size: 16px; }
+        /* Les recits ne defilent plus chacun chez soi : ils se lisent en
+           colonnes de journal, pour occuper la largeur sans lignes trop longues. */
+        .fiche-agrandie .parcours-popup-journal {
+            max-height: none;
+            overflow: visible;
+            column-width: 36em;
+            column-gap: 2.2em;
+            column-rule: 1px solid rgba(0, 0, 0, 0.08);
+        }
+        
+        /* Styles pour la mise en page de la popup */
+        .popup-layout {
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) minmax(180px, 320px);
+            align-items: flex-start;
+            gap: 15px;
+            box-sizing: border-box;
+        }
+        .popup-text-container {
+            grid-column: 1;
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            position: relative;
+            box-sizing: border-box;
+        }
+        .popup-image-wrapper {
+            grid-column: 2;
+            display: flex;
+            /* En colonne, sinon le credit se range A COTE de l'image, en
+               second element de la ligne flex, et lui mange sa largeur. Il
+               va dessous. */
+            flex-direction: column;
+            flex: 0 0 auto;
+            min-width: 0;
+            position: sticky;
+            top: 12px;
+            align-self: flex-start;
+        }
+        .popup-image-button {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: zoom-in;
+            width: 100%;
+            display: block;
+        }
+        .popup-image-button:focus-visible {
+            outline: 2px solid #FFD700;
+            outline-offset: 2px;
+        }
+        .popup-image-wrapper .popup-image {
+            width: 100%;
+            height: auto;
+            max-height: 70vh;
+            border-radius: 6px;
+            display: block;
+            object-fit: contain;
+        }
+        .popup-image-credit {
+            margin: 4px 0 0;
+            font-size: 10px;
+            line-height: 1.3;
+            color: #777;
+            text-align: center;
+        }
+        .popup-image-credit a { color: inherit; text-decoration: underline; }
+        .popup-image-thumb {
+            display: none;
+        }
+        .popup-image-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            border-radius: 4px;
+            cursor: zoom-in;
+        }
+        .popup-fullwidth {
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 10px;
+            grid-column: 1;
+        }
+
+        /* Animation pour attirer l'attention sur les images (version discrète) */
+        @keyframes attention-glow {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 86, 179, 0.6);
+            }
+            70% {
+                /* Halo plus fin et discret (spread réduit de 18px à 10px) */
+                box-shadow: 0 0 8px 10px rgba(0, 86, 179, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 86, 179, 0);
+            }
+        }
+
+        .popup-image-button.image-attention {
+            /* On s'assure que le halo prend la forme de l'image */
+            border-radius: 6px;
+            /* Fréquence plus lente (4s au lieu de 2.5s) */
+            animation: attention-glow 4s infinite;
+        }
+
+        @media  (min-width: 769px)  {
+            .leaflet-popup.popup-has-image .leaflet-popup-content-wrapper,
+            .leaflet-popup.popup-has-image .leaflet-popup-content {
+                width: min(650px, calc(100vw - 60px));
+                max-width: min(650px, calc(100vw - 60px));
+            }
+            /* Popups sans image utilisent la même largeur pour afficher plus de texte */
+            .leaflet-popup:not(.popup-has-image) .leaflet-popup-content-wrapper,
+            .leaflet-popup:not(.popup-has-image) .leaflet-popup-content {
+                width: min(720px, calc(100vw - 60px));
+                max-width: min(720px, calc(100vw - 60px));
+            }
+            /* ... sauf les fiches de parcours, plus etroites. Cette regle-ci
+               l'emporte sur celle du haut de la feuille : les deux largeurs
+               doivent donc rester accordees. */
+            .leaflet-popup:not(.popup-has-image) .leaflet-popup-content-wrapper:has(.parcours-popup),
+            .leaflet-popup:not(.popup-has-image) .leaflet-popup-content:has(.parcours-popup) {
+                width: 460px;
+                max-width: 460px;
+            }
+            /* Le texte utilise toute la largeur quand il n'y a pas d'image */
+            .leaflet-popup:not(.popup-has-image) .popup-text-container {
+                width: 100%;
+                max-width: 100%;
+            }
+        }
+
+        @media  (max-width: 768px)  {#map { height: calc(100vh - var(--nav-height)); }
+            .search-container { top: calc(var(--nav-height) + 8px); }
+            .leaflet-popup {
+                width: 85vw;
+                max-width: 380px;
+            }
+            .leaflet-popup-content-wrapper { width: 100%; }
+            .leaflet-popup-content { font-size: 0.8rem; line-height: 1.3; max-height: min(420px, 65vh); overflow-y: auto; }
+            .popup-layout {
+                position: relative;
+                display: block;
+                grid-template-columns: none;
+            }
+            .popup-text-container {
+                width: 100%;
+                padding-right: 0;
+                padding-top: 0;
+            }
+            .popup-image-wrapper {
+                position: static;
+                width: 100%;
+                height: auto;
+                flex-basis: auto;
+                margin-top: 10px;
+            }
+            .popup-image-wrapper .popup-image {
+                max-width: 100%;
+                height: auto;
+                max-height: 60vh;
+                object-fit: contain;
+                border: 1px solid #eee;
+                border-radius: 4px;
+            }
+            .popup-alias-p,
+            .popup-ause-name-p {
+                padding-right: calc(6em + 16px);
+            }
+            /* 3 lignes seulement (NF + NA + LatLong) → 2em pour passer sous la vignette */
+            .popup-layout .popup-text-container:not(:has(.popup-link-row)):not(:has(.popup-alias-p)):not(:has(.popup-indigenous-p)) .popup-characteristic-p {
+                margin-top: 2em;
+            }
+            /* 4+ lignes (alias ou nom indigène présent) → 1em suffit */
+            .popup-layout .popup-text-container:not(:has(.popup-link-row)):is(:has(.popup-alias-p), :has(.popup-indigenous-p)) .popup-characteristic-p {
+                margin-top: 1em;
+            }
+            .popup-image-thumb {
+                display: block;
+                position: absolute;
+                top: 0;
+                right: 8px;
+                height: 6em;
+                min-width: 6em;
+                max-width: 13em;
+                width: auto;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0;
+                border: none;
+                border-radius: 0;
+                overflow: hidden;
+                background: transparent;
+                box-shadow: none;
+            }
+            .popup-image-thumb:focus-visible {
+                outline: 2px solid #FFD700;
+                outline-offset: 2px;
+            }
+            .popup-image-thumb img {
+                height: 100%;
+                width: auto;
+                max-width: 100%;
+                object-fit: contain;
+            }
+            .popup-fullwidth {
+                grid-column: 1 / -1;
+            }
+            .map-info-coordinates {
+                display: none;
+            }
+
+            /* === Mobile UI Fixes (Attempt 4) === */
+
+            /* 1. Reduce size of map zoom buttons */
+            .leaflet-control-zoom a {
+                width: 28px;
+                height: 28px;
+                line-height: 28px;
+                font-size: 1.4rem;
+            }
+
+            /* 2. Move the base map control into the bottom bar */
+            .leaflet-bottom.leaflet-left {
+                display: flex;
+                align-items: stretch;
+            }
+
+            .map-info-control {
+                flex: 1;
+                background: rgba(255, 255, 255, 0.95);
+                box-shadow: none;
+                gap: 8px;
+            }
+
+            /* à l'étroit, le curseur d'opacité passe sous l'échelle */
+            .map-info-basemap, .map-info-opacity { font-size: 0.7rem; }
+            .map-info-basemap select { max-width: 110px; }
+            .map-info-scale-wrapper { gap: 6px; }
+            .map-info-opacity input[type="range"] { width: 50px; }
+            /* Le curseur et sa valeur se passent de libellé : la place gagnée
+               garde l'échelle sur la ligne, et la barre laisse toujours de
+               quoi lire le début de la mention des sources. */
+            .map-info-opacity > span { display: none; }
+            .map-info-control { max-width: calc(100vw - 64px); }
+        }
+        .image-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .image-modal.open { display: flex; }
+        .image-modal-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .image-modal img {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            background: #fff;
+            display: block;
+        }
+        .image-modal button {
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            border: 2px solid #fff;
+            font-size: 1.5rem;
+            line-height: 1;
+            padding: 8px 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            transition: all 0.2s ease;
+        }
+        .image-modal button:hover {
+            background: rgba(255,255,255,0.95);
+            color: #000;
+            transform: scale(1.1);
+        }
+        .image-modal button:focus-visible {
+            outline: 2px solid #FFD700;
+            outline-offset: 2px;
+        }
+        /* Une note de source : un carton sobre, pour créditer un transcripteur
+           là où les autres sources portent un lien vers leur document. */
+        .note-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3200;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+        .note-modal.open { display: flex; }
+        .note-modal-content {
+            background: #fff;
+            max-width: 430px;
+            padding: 22px 24px 18px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            font-family: 'Lato', sans-serif;
+            font-size: 0.98rem;
+            line-height: 1.5;
+            color: #222;
+            position: relative;
+        }
+        .note-modal-close {
+            position: absolute;
+            top: 6px;
+            right: 10px;
+            border: 0;
+            background: none;
+            font-size: 1.5rem;
+            line-height: 1;
+            cursor: pointer;
+            color: #666;
+        }
+        .note-modal-close:hover { color: #000; }
+        .note-modal-close:focus-visible { outline: 2px solid #0b6; }
+
+        .map-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+        .map-modal.open { display: flex; }
+        .map-modal-content {
+            background: #fff;
+            width: 96vw;
+            max-width: 1150px;
+            max-height: 92vh;
+            display: flex;
+            flex-direction: column;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            overflow: hidden;
+        }
+        .map-modal-header {
+            padding: 12px 16px;
+            background: #f7f7f7;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+            z-index: 30;
+        }
+        .map-modal-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+        .map-modal-loader {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            color: #333;
+            font-family: 'Lato', sans-serif;
+            font-size: 0.95rem;
+        }
+        .map-modal-loader.hidden {
+            display: none;
+        }
+        .map-modal-loader-spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,0.2);
+            border-top-color: #0b63d1;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            flex: 0 0 auto;
+        }
+        .map-modal-loader.error .map-modal-loader-spinner {
+            border-top-color: #f67280;
+            animation: none;
+        }
+        .map-modal-loader-message {
+            line-height: 1.2;
+            text-align: center;
+        }
+        .map-modal-title {
+            font-family: 'Lato', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 400;
+            margin: 0;
+            color: #333;
+        }
+        .map-modal-close {
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            border: 2px solid #fff;
+            font-size: 1.5rem;
+            line-height: 1;
+            padding: 8px 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            transition: all 0.2s ease;
+        }
+        .map-modal-close:hover {
+            background: rgba(255,255,255,0.95);
+            color: #000;
+            transform: scale(1.1);
+        }
+        .map-modal-close:focus-visible {
+            outline: 2px solid #FFD700;
+            outline-offset: 2px;
+        }
+        .map-modal-body {
+            flex: 1;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            background: #000;
+            overflow-y: auto;
+            position: relative;
+        }
+        .map-modal-content {
+            position: relative;
+        }
+        .map-modal-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: rgba(0,0,0,0.78);
+            color: #f5f5f5;
+            font-family: 'Lato', sans-serif;
+            font-size: 0.95rem;
+            z-index: 20;
+            text-align: center;
+            padding: 24px;
+            transition: opacity 0.2s ease;
+        }
+        .map-modal-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .map-modal-overlay .map-modal-spinner-icon {
+            width: 56px;
+            height: 56px;
+            border: 5px solid rgba(255,255,255,0.35);
+            border-top-color: #FFD700;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+        .map-modal-overlay.error .map-modal-spinner-icon {
+            border-color: rgba(255,255,255,0.35);
+            border-top-color: #f67280;
+            animation: none;
+        }
+        .map-modal-overlay-message {
+            margin-top: 4px;
+        }
+        .map-modal-content-wrapper {
+            width: 100%;
+            height: 100%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .map-modal-content-wrapper.visible {
+            display: flex;
+        }
+        .map-modal-body iframe,
+        .map-modal-body embed,
+        .map-modal-body object {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #000;
+        }
+        .map-modal-body img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .details-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3200;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+        .details-modal.open { display: flex; }
+        .details-modal-dialog {
+            background: #fff;
+            width: 90vw;
+            max-width: 920px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            border-radius: 12px;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+            overflow: hidden;
+        }
+        .details-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            gap: 16px;
+            padding: 8px 18px;
+            background: #f7f7f7;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+        .details-modal-title {
+            font-family: 'Lato', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin: 0;
+            color: #222;
+            text-align: center;
+        }
+        .details-modal-close {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 1.6rem;
+            line-height: 1;
+            cursor: pointer;
+            color: #333;
+            padding: 4px;
+        }
+        .details-modal-close:focus-visible {
+            outline: 2px solid #0056b3;
+            outline-offset: 2px;
+        }
+        .details-modal-body {
+            position: relative;
+            flex: 1;
+            background: #fff;
+        }
+        .details-modal-loading {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: rgba(255,255,255,0.92);
+            color: #333;
+            font-family: 'Lato', sans-serif;
+            font-size: 0.95rem;
+            z-index: 10;
+            transition: opacity 0.2s ease;
+        }
+        .details-modal-loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .details-modal-loading.error .details-modal-spinner {
+            display: none;
+        }
+        .details-modal-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #cfd8dc;
+            border-top-color: #0056b3;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+        .details-modal-frame {
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            display: block;
+            border: none;
+        }
+    .leaflet-tile-pane .leaflet-layer:last-child {
+            font-size: 14px !important;
+        }
+        .wiki-link {
+            color: #0645ad;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .wiki-link:hover {
+            text-decoration: underline;
+        }
+        .wiki-card {
+            position: absolute;
+            z-index: 9999;
+            background: #fff;
+            border-radius: 0;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+            display: flex;
+            overflow: hidden;
+            max-width: 520px;
+            height: 240px;
+            font-size: 12px;
+        }
+        .wiki-card:not(.has-image) {
+            height: auto;
+            max-height: 240px;
+            display: block;
+        }
+        .wiki-card:not(.has-image) .wiki-card-content {
+            padding-bottom: 10px;
+        }
+        .wiki-card * {
+            box-sizing: border-box;
+        }
+        .wiki-card-image {
+            flex: 0 0 210px;
+            margin: 0;
+            padding: 0;
+            line-height: 0;
+            background: #000;
+        }
+        .wiki-card-image img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+            object-position: top;
+        }
+        .wiki-card-content {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            padding: 10px 14px 6px 14px;
+            overflow: hidden;
+            background: #fff;
+        }
+        .wiki-card-title {
+            font-weight: 600;
+            margin: 0 0 6px 0;
+            font-size: 13px;
+        }
+        .wiki-card-text {
+            flex: 1 1 auto;
+            overflow: hidden;
+            line-height: 1.25;
+        }
+        .wiki-card-text p {
+            margin: 0;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 10;
+            overflow: hidden;
+        }
+        .wiki-card-source {
+            flex: 0 0 auto;
+            margin-top: 4px;
+            font-size: 11px;
+            color: #777;
+            text-align: right;
+            border-top: 1px solid #eee;
+            padding-top: 3px;
+        }
+        .wiki-card-source a {
+            color: #0645ad;
+            text-decoration: none;
+        }
+        .wiki-card-source a:hover {
+            text-decoration: underline;
+        }
+        .search-match {
+            font-weight: inherit;
+            color: inherit;
+            background-color: transparent;
+        }
+        .leaflet-popup-content .search-match {
+            color: inherit !important;
+            font-weight: inherit !important;
+        }
+        .leaflet-popup-content span.search-match {
+            color: inherit !important;
+            font-weight: inherit !important;
+        }
+    
