@@ -20,6 +20,21 @@ son dossier `commun/`.
 - `css/nav.css` : la barre de navigation.
 - `lib/` : bibliothèques tierces (Leaflet, Esri Leaflet, PolylineDecorator, OpenSeadragon, Mirador).
 - `video/` : le film « Naissance de l’Australie sur les cartes » (FR et EN).
+- `js/traductions-communes.js` : les textes partagés (menus, carte, recherche, fiches, journaux,
+  assistant…). Chaque page le charge **avant** le `js/translations.js` du site, qui complète ou
+  remplace ces textes par les siens (`Object.assign(translations.fr, {…})`).
+- `api/` : les fonctions Vercel communes — `responses-chat.js` (assistant), `contact.js` (formulaire,
+  l'objet du courriel nomme le site d'origine), `instructions.js` (consignes du modèle, lues aussi par
+  les scripts `rag/` du site French). Chaque site les réexporte depuis son `api/` :
+  `export { default } from '../commun/api/responses-chat.js';`
+- `scripts/` : `serveur_local.mjs` (`npm run dev`, depuis la racine du site), `generate_avif_previews.sh`,
+  `encode_pngs_to_jpg_mozjpeg.sh`.
+- `docs/glossaire-nautique.en.md` : le relevé anglais des termes de Flinders, lu par le
+  `scripts/glossaire_nautique.py` de chaque site.
+
+Ordre de chargement d'une page : `commun/js/traductions-communes.js`, `js/translations.js`
+(puis `js/translations-flinders.js` sur le site Flinders), `commun/js/main.js`, puis le moteur
+de la page.
 
 Rien de propre à un site ne doit figurer ici : ce qui diffère d'un site à l'autre
 passe par la configuration `window.CARTE_CONFIG`, que chaque site déclare dans son
