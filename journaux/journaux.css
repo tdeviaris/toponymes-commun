@@ -1,0 +1,208 @@
+        @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap');
+        :root { --nav-height: 72px; --bleu: #0056b3; --bleu-vif: #0b63d1; }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Lato', sans-serif;
+            margin: 0;
+            background-color: #999;
+            color: #333;
+            padding-top: var(--nav-height);
+        }
+        /* Toute la largeur : les colonnes de journaux ont besoin de la place. */
+        .container { max-width: none; margin: 0; padding: 16px; }
+        .content-section {
+            background: #fff;
+            padding: clamp(12px, 2vw, 20px);
+            margin-top: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .content-section h2 {
+            font-size: 1.6rem; font-weight: 700; color: #333; text-align: center;
+            border-bottom: 2px solid var(--bleu); padding-bottom: 6px; margin: 0 0 12px;
+        }
+
+        /* ---------- Les trois etapes de la selection ---------- */
+        .filtres {
+            display: grid;
+            grid-template-columns: minmax(200px, 0.9fr) minmax(240px, 1fr) minmax(300px, 2.2fr);
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        @media (max-width: 900px) { .filtres { grid-template-columns: 1fr; } }
+        .etape {
+            border: 1px solid #e5edf6; border-radius: 12px; background: #fbfdff;
+            padding: 8px 12px;
+        }
+        .etape h3 {
+            margin: 0 0 6px; font-size: 0.95rem; color: var(--bleu);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .num {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: var(--bleu); color: #fff; font-size: 0.75rem;
+        }
+        .choix { display: flex; align-items: center; gap: 8px; margin: 3px 0; cursor: pointer; }
+        /* Les navires de Baudin, en retrait sous l'expedition. */
+        .choix.sous-choix { margin-left: 24px; font-size: 0.88rem; }
+        .choix.sous-choix.eteint { opacity: 0.45; cursor: default; }
+        .choix input { accent-color: var(--bleu-vif); width: 16px; height: 16px; margin: 0; }
+        .choix .periode { color: #888; font-size: 0.8rem; margin-left: auto; white-space: nowrap; }
+        .pastille-exp {
+            width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto;
+        }
+
+        /* Dates : champ + icone calendrier, comme sur la carte. */
+        .ligne-date { display: flex; align-items: center; gap: 8px; margin: 4px 0; position: relative; }
+        .periode-grille { display: flex; align-items: center; gap: 10px; }
+        .periode-dates { flex: 0 1 auto; }
+        .champ-date { width: 180px; }
+        .jour-boutons { display: flex; gap: 4px; }
+        /* Boutons de la carte (map.html, point precedent / suivant). */
+        .timeline-btn {
+            width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+            padding: 0; border: 1px solid rgba(0,0,0,0.25); border-radius: 4px; background: #fff; cursor: pointer;
+        }
+        .timeline-btn:hover:not(:disabled) { background: #f0f0f0; }
+        .timeline-btn:disabled { opacity: 0.35; cursor: default; }
+        .timeline-icon-next, .timeline-icon-prev {
+            width: 6px; height: 6px; border: solid #333; border-width: 2px 2px 0 0;
+        }
+        .timeline-icon-next { transform: rotate(45deg); margin-left: -3px; }
+        .timeline-icon-prev { transform: rotate(-135deg); margin-right: -3px; }
+        .ligne-date label { width: 34px; font-size: 0.85rem; color: #555; }
+        .champ-date {
+            display: flex; align-items: center; justify-content: space-between;
+            border: 1px solid rgba(0,0,0,0.2); border-radius: 6px; padding: 5px 6px 5px 10px;
+            background: #fff; font-size: 0.9rem; min-height: 30px;
+        }
+        .cal-btn {
+            width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+            padding: 0; border: 0; background: none; color: var(--bleu-vif); cursor: pointer;
+            border-radius: 3px; line-height: 0;
+        }
+        .cal-btn:hover { color: #08408c; }
+        .cal-btn svg { width: 15px; height: 15px; display: block; }
+        /* Dates remarquables : la meme liste deroulante que sur la carte. */
+        .remarquables-select {
+            width: 100%; margin-top: 6px; font-family: inherit; font-size: 0.82rem; color: #222;
+            background: #fff; border: 1px solid rgba(0,0,0,0.2); border-radius: 6px; padding: 5px 6px;
+        }
+
+        /* Le calendrier de saisie : copie de celui de la carte (map.html). */
+        .timeline-calendar {
+            position: absolute; top: calc(100% + 5px); right: 0; z-index: 1200;
+            width: 224px; padding: 6px; background: #fff;
+            border: 1px solid rgba(0,0,0,0.2); border-radius: 6px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .timeline-calendar[hidden] { display: none; }
+        .cal-head { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; }
+        .cal-nav {
+            flex: 0 0 auto; width: 20px; height: 22px; padding: 0;
+            border: 1px solid rgba(0,0,0,0.2); border-radius: 4px; background: #fff;
+            color: var(--bleu-vif); font-size: 14px; line-height: 1; cursor: pointer;
+        }
+        .cal-nav:hover:not(:disabled) { background: rgba(11,99,209,0.10); }
+        .cal-nav:disabled { color: rgba(0,0,0,0.25); cursor: default; }
+        .cal-head select {
+            flex: 1 1 auto; min-width: 0; font-family: inherit; font-size: 12px; color: #222;
+            background: #fff; border: 1px solid rgba(0,0,0,0.2); border-radius: 4px; padding: 2px 3px;
+        }
+        .cal-head .cal-annee { flex: 0 0 62px; }
+        .cal-dows, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
+        .cal-dow { text-align: center; font-size: 10px; font-weight: 700; color: rgba(0,0,0,0.5); padding-bottom: 2px; }
+        .cal-jour {
+            position: relative; height: 24px; padding: 0; border: 0; border-radius: 4px;
+            background: none; font-family: inherit; font-size: 11px; color: #222; cursor: pointer;
+        }
+        .cal-jour:hover:not(:disabled) { background: rgba(11,99,209,0.12); }
+        .cal-jour:disabled { color: rgba(0,0,0,0.22); cursor: default; }
+        .cal-jour.is-vide { visibility: hidden; }
+        .cal-jour.is-choisi { background: var(--bleu-vif); color: #fff; font-weight: 700; }
+        .cal-jour.dans-periode:not(.is-choisi) { background: rgba(11,99,209,0.10); }
+        .cal-jour.a-releve::after {
+            content: ''; position: absolute; left: 50%; bottom: 2px; width: 3px; height: 3px;
+            margin-left: -1.5px; border-radius: 50%; background: var(--bleu-vif);
+        }
+        .cal-jour.is-choisi.a-releve::after { background: #fff; }
+
+        /* Journaux : une colonne par expedition ; le nom de chacune se tient
+           sur la ligne du titre de l'etape, au-dessus de sa colonne. */
+        .journaux-grille { display: grid; column-gap: 18px; row-gap: 0; align-items: start; }
+        .journaux-grille .entete { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; min-height: 22px; }
+        .journaux-grille .entete h3 { margin: 0; }
+        .groupe-titre { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+        .journaux-grille .choix { margin: 1px 0; line-height: 1.25; font-size: 0.92rem; }
+        .choix.vide { opacity: 0.45; cursor: default; }
+        .choix .nb { color: #888; font-size: 0.78rem; margin-left: auto; white-space: nowrap; }
+        .choix .navire { color: #888; font-style: italic; font-size: 0.82rem; }
+        .aucun { color: #999; font-style: italic; font-size: 0.9rem; }
+        .tout { font: inherit; font-size: 0.75rem; margin-left: auto; border: 0; background: none; color: var(--bleu-vif); cursor: pointer; }
+
+        /* ---------- Le tableau comparatif ---------- */
+        .cadre {
+            height: 68vh; min-height: 360px; overflow: auto;
+            border: 1px solid #d8e2ee; border-radius: 8px; background: #fff;
+        }
+        table.comparaison { border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%; }
+        .comparaison th, .comparaison td {
+            vertical-align: top; text-align: left; padding: 10px 12px;
+            border-bottom: 1px solid #edf1f6; border-right: 1px solid #edf1f6;
+        }
+        /* En-tete fixe en haut, colonne des dates fixe a gauche. */
+        .comparaison thead th {
+            position: sticky; top: 0; z-index: 2; background: #f4f8fd;
+            border-bottom: 2px solid var(--bleu); font-size: 0.85rem;
+        }
+        .comparaison thead th .auteur { display: block; font-weight: 700; color: #222; }
+        .comparaison thead th .sous { display: block; font-weight: 400; color: #777; font-size: 0.78rem; margin-top: 2px; }
+        .comparaison thead th .bande { display: block; height: 3px; border-radius: 2px; margin-bottom: 6px; }
+        .comparaison .col-date {
+            position: sticky; left: 0; z-index: 1; background: #fbfdff;
+            width: 120px; min-width: 120px; font-size: 0.85rem;
+        }
+        .comparaison thead .col-date { z-index: 3; background: #f4f8fd; }
+        .comparaison td.col-date .jour { font-weight: 700; color: #222; white-space: nowrap; }
+        .comparaison td.col-date .semaine { color: #888; font-size: 0.78rem; }
+        .comparaison td.col-date .remarquable {
+            margin-top: 6px; font-size: 0.75rem; color: #7a5b00; background: #fff8e1;
+            border-left: 3px solid #e0b000; padding: 3px 5px; border-radius: 0 4px 4px 0;
+        }
+        .comparaison td.texte {
+            width: 380px; min-width: 300px; max-width: 420px;
+            font-family: 'EB Garamond', Georgia, serif; font-size: 1.02rem; line-height: 1.45; color: #2a2a2a;
+        }
+        .comparaison td.texte.vide { background: repeating-linear-gradient(135deg, #fafafa 0 6px, #f4f4f4 6px 12px); }
+        .comparaison tbody tr:hover td.texte:not(.vide) { background: #fffdf5; }
+        /* Un long texte ne fait pas exploser la ligne : il se replie. */
+        .replie { max-height: 14em; overflow: hidden; position: relative; }
+        .replie::after {
+            content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3em;
+            background: linear-gradient(transparent, #fff);
+        }
+        .deplie {
+            font: inherit; font-family: 'Lato', sans-serif; font-size: 0.78rem;
+            border: 0; background: none; color: var(--bleu-vif); cursor: pointer; padding: 4px 0 0;
+        }
+        .lignes { white-space: pre-line; }
+        /* Releves horaires de Hamelin : le tableau de la fiche parcours
+           (map.html), qui defile de cote plutot que d'elargir la colonne. */
+        .journal-tableau-cadre { overflow-x: auto; margin: 0.3em 0 0.5em; }
+        .journal-tableau {
+            border-collapse: collapse; font-family: 'Lato', sans-serif; font-size: 11px;
+            line-height: 1.3; white-space: nowrap; font-variant-numeric: tabular-nums;
+        }
+        .journal-tableau th, .journal-tableau td {
+            border: 1px solid rgba(0,0,0,0.15); padding: 1px 5px; text-align: center;
+        }
+        .journal-tableau th { font-weight: 600; background: rgba(0,0,0,0.05); }
+        .journal-tableau tbody tr:nth-child(even) td { background: rgba(0,0,0,0.025); }
+        .journal-tableau td:last-child, .journal-tableau th:last-child { text-align: left; }
+        .journal-para { margin: 0 0 0.6em; }
+        .journal-para:last-child { margin-bottom: 0; }
+        .journal-rature { text-decoration: line-through; opacity: 0.7; }
+        .etat { padding: 40px; text-align: center; color: #888; }
+        footer { background: #1f1f1f; color: #fff; text-align: center; padding: 20px; margin-top: 20px; }
+    

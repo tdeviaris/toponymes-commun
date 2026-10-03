@@ -1,0 +1,68 @@
+  :root{
+    --fond:#1d1b18; --panneau:rgba(29,27,24,.86); --bord:rgba(255,255,255,.12);
+    --texte:#efe9df; --doux:#b9b0a2; --accent:#d9b26a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--fond);color:var(--texte);
+    font:15px/1.45 Georgia,"Times New Roman",serif;overflow:hidden}
+  #carte{position:absolute;inset:0}
+
+  /* cartel */
+  #cartel{position:absolute;top:16px;left:16px;max-width:min(430px,calc(100% - 96px));
+    background:var(--panneau);border:1px solid var(--bord);border-radius:10px;
+    padding:14px 16px 12px;backdrop-filter:blur(6px);z-index:5;transition:opacity .25s}
+  #cartel h1{margin:0 0 4px;font-size:18px;font-weight:normal;letter-spacing:.01em}
+  #cartel .auteur{color:var(--doux);font-style:italic;margin:0 0 8px}
+  #cartel .source{font:12px/1.4 system-ui,sans-serif;color:var(--doux);margin:0}
+  #cartel .source a{color:var(--accent)}
+  /* Bouton plus petit que ceux de la barre d'outils : replié, le cartel ne fait
+     qu'une ligne et un bouton de 40 px en dépasserait. */
+  #cartel button.replier{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:6px}
+  #cartel button.replier svg{width:16px;height:16px;transition:transform .2s}
+  #cartel.replie{padding:6px 44px 6px 14px}
+  #cartel.replie .auteur,#cartel.replie .source{display:none}
+  #cartel.replie h1{font-size:14px;margin:0}
+  /* replié, le cartel est trop bas pour un bouton calé en haut : on le centre */
+  #cartel.replie button.replier{top:50%;transform:translateY(-50%)}
+  #cartel.replie button.replier svg{transform:rotate(180deg)}
+
+  /* barre d'outils */
+  #outils{position:absolute;top:16px;right:16px;display:flex;flex-direction:column;gap:6px;z-index:5}
+  button,#bRetour{appearance:none;border:1px solid var(--bord);background:var(--panneau);color:var(--texte);
+    width:40px;height:40px;border-radius:8px;cursor:pointer;display:grid;place-items:center;
+    backdrop-filter:blur(6px);transition:background .15s,border-color .15s;text-decoration:none}
+  button:hover,#bRetour:hover{background:rgba(60,55,48,.95);border-color:rgba(255,255,255,.28)}
+  button:focus-visible,#bRetour:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  button svg,#bRetour svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;
+    stroke-linecap:round;stroke-linejoin:round}
+  #bLangue img{width:22px;height:auto;border-radius:2px}
+  .sep{height:6px}
+
+  /* niveau de zoom */
+  #niveau{position:absolute;left:16px;bottom:16px;z-index:5;background:var(--panneau);
+    border:1px solid var(--bord);border-radius:8px;padding:6px 10px;
+    font:12px/1 system-ui,sans-serif;color:var(--doux);font-variant-numeric:tabular-nums}
+
+  /* aide clavier */
+  #aide{position:absolute;right:64px;top:16px;z-index:6;background:var(--panneau);
+    border:1px solid var(--bord);border-radius:10px;padding:12px 14px;
+    font:13px/1.7 system-ui,sans-serif;color:var(--texte);display:none;min-width:230px}
+  #aide.ouverte{display:block}
+  #aide kbd{display:inline-block;min-width:22px;text-align:center;padding:0 5px;margin-right:6px;
+    border:1px solid var(--bord);border-radius:4px;background:rgba(255,255,255,.06);
+    font:12px/20px system-ui,sans-serif}
+
+  #chargement{position:absolute;inset:0;display:grid;place-items:center;z-index:4;
+    color:var(--doux);font-style:italic;pointer-events:none;transition:opacity .4s;
+    text-align:center;padding:0 24px}
+
+  /* mini-carte : laisser OpenSeadragon la placer, on l'habille */
+  .navigator{border:1px solid var(--bord)!important;border-radius:6px;
+    background:rgba(0,0,0,.35)!important;box-shadow:0 2px 10px rgba(0,0,0,.4)}
+  .navigator .displayregion{border:2px solid var(--accent)!important}
+
+  @media (max-width:560px){
+    #cartel{max-width:calc(100% - 80px)}
+    #cartel h1{font-size:15px}
+    .navigator{display:none!important}
+  }
