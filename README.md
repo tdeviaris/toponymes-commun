@@ -10,6 +10,11 @@ son dossier `commun/`.
 - `carte/carte.js` : le moteur de la carte interactive (lieux, routes jour par jour,
   frise, calendrier, dates remarquables, cartes anciennes, fiches, journaux, mobile).
 - `carte/carte.css` : ses styles.
+- `journaux/` : la page « Journaux de bord comparés » (`JOURNAUX_CONFIG` : `expeditions`, `depart`).
+- `visionneuse/` : la visionneuse des cartes anciennes (`VISIONNEUSE_CONFIG` : `site`, `carteParDefaut`).
+- `assistant/` : l'assistant Q&R (`ASSISTANT_CONFIG` : `ici`, `sites`, `questions`). Chaque lieu et chaque
+  journée s'ouvrent sur la carte du site qui les porte (Flinders → Flinders Place Names, Baudin et
+  d'Entrecasteaux → French Place Names).
 - `js/main.js` : navigation, changement de langue, pied de page, aperçus AVIF (toutes les pages).
 - `js/resource-modals.js`, `css/resource-features.css` : fenêtres et mises en page des pages Ressources.
 - `css/nav.css` : la barre de navigation.
