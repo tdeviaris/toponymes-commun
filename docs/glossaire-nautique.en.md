@@ -307,7 +307,7 @@ The sea bed, and the nature of it — sand, mud, coral, rock.
 Seas breaking over a shoal or a reef, and betraying it from afar.
 
 **Fathom, fathoms, fms.**
-Six feet; the unit in which depth is sounded.
+Six feet; the unit in which depth is sounded. About 1.83 m (1 m 83 cm).
 
 **Grounded, took the ground**
 Touched the bottom, whether by accident or design.
