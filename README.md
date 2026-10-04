@@ -27,8 +27,13 @@ son dossier `commun/`.
   l'objet du courriel nomme le site d'origine), `instructions.js` (consignes du modèle, lues aussi par
   les scripts `rag/` du site French). Chaque site les réexporte depuis son `api/` :
   `export { default } from '../commun/api/responses-chat.js';`
-- `scripts/` : `serveur_local.mjs` (`npm run dev`, depuis la racine du site), `generate_avif_previews.sh`,
-  `encode_pngs_to_jpg_mozjpeg.sh`.
+- `scripts/` : à lancer depuis la racine du site (chaque outil traite les données du dossier courant et
+  ignore les fichiers que ce site n'a pas) — `serveur_local.mjs` (`npm run dev`), `littoral.py`,
+  `controle_littoral.py`, `contournements.py`, `renfloue.py` (routes et trait de côte), `traduit_journaux.py`,
+  `generate_avif_previews.sh`, `encode_pngs_to_jpg_mozjpeg.sh`, et `Toponyms_update.gs`, le script Apps Script
+  du classeur Toponymes : il publie l'onglet Source dans FrenchNamesAustralia et l'onglet Flinders dans
+  FlindersPlaceNames, chacun avec une copie dans l'autre dépôt. Toute modification doit être recollée dans
+  l'éditeur Apps Script du classeur.
 - `docs/glossaire-nautique.en.md` : le relevé anglais des termes de Flinders, lu par le
   `scripts/glossaire_nautique.py` de chaque site.
 
